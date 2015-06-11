@@ -9,6 +9,7 @@ COPY ctags /root/.ctags
 COPY zshrc /root/.zshrc
 
 ENV SHELL=/usr/bin/zsh
+ENV TERM=xterm-256color
 
 # Start by changing the apt output, as stolen from Discourse's Dockerfiles.
 RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections && \
@@ -39,6 +40,7 @@ RUN chsh -s /usr/bin/zsh root && \
 # setup vim, plugins still have to be installed and youcompleteme compiled manually
   git clone https://github.com/copenhas/dotvim.git ./code/dotvim && \
   ln -s ./code/dotvim/vim .vim && \
+  ln -s ./code/dotvim/vimrc .vimrc && \
   git clone https://github.com/gmarik/vundle.git ./code/dotvim/vim/bundle/vundle && \
 
 # Fix for occasional errors in perl stuff (git, ack) saying that locale vars
