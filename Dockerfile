@@ -14,7 +14,7 @@ ENV TERM=xterm-256color
 # Start by changing the apt output, as stolen from Discourse's Dockerfiles.
 RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections && \
   apt-get update && \
-# install packages needed
+# install packages needed/wanted
   apt-get install -y \
   build-essential \
   automake \
@@ -23,6 +23,7 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections && 
   man \
   ack-grep \
   llvm \
+  clang \
   git \
   vim \
   curl \
@@ -30,18 +31,26 @@ RUN echo "debconf debconf/frontend select Teletype" | debconf-set-selections && 
   ssh \
   zsh \
   ruby \
-  python-dev
+  python-dev \
+  python-pip
 
 
 # zsh - ignoring any return status from it since it returns '1' but succeeded anyway
 RUN chsh -s /usr/bin/zsh root && \
   curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh || true && \
 
-# setup vim, plugins still have to be installed and youcompleteme compiled manually
+# python autocompleter that youcompleteme supports
+  pip install jedi && \
+
+# setup vim profile
   git clone https://github.com/copenhas/dotvim.git ./code/dotvim && \
   ln -s ./code/dotvim/vim .vim && \
   ln -s ./code/dotvim/vimrc .vimrc && \
   git clone https://github.com/gmarik/vundle.git ./code/dotvim/vim/bundle/vundle && \
+
+# install plugins and compile youcompleteme
+  vim -E -s -u ./.vim/bundles.vim +PluginInstall +qall || true && \
+  ~/.vim/bundle/YouCompleteMe/install.sh --clang-completer && \
 
 # Fix for occasional errors in perl stuff (git, ack) saying that locale vars
 # aren't set.
@@ -59,5 +68,6 @@ EXPOSE 22
 # When the container is started we want to
 # install the SSH keys of ENV-configured GitHub users before running the SSH
 # server process. See README for SSH instructions.
+ONBUILD CMD /root/ssh_key_adder.rb && /usr/sbin/sshd -D
 CMD /root/ssh_key_adder.rb && /usr/sbin/sshd -D
 
